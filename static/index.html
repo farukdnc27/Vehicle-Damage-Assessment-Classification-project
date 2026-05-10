@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Araç Hasar Analizi AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      
+      <!-- SOL PANEL: GİRDİLER -->
+      <section class="workbench">
+        <header class="topbar">
+          <div class="header-titles">
+            <p class="eyebrow">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+              AI Pipeline
+            </p>
+            <h1>Araç Ekspertiz</h1>
+          </div>
+          
+          <div class="topbar-actions">
+            <div class="status-pill" id="modelStatus">Kontrol ediliyor...</div>
+            <button id="themeToggle" class="icon-button theme-toggle" type="button" title="Gece/Gündüz Modu">
+              <!-- Ay ikonu -->
+              <svg id="moonIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24" style="display:none;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"></path></svg>
+              <!-- Güneş ikonu -->
+              <svg id="sunIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+            </button>
+          </div>
+        </header>
+
+        <form class="panel upload-panel" id="damageForm">
+          
+          <div class="pipeline-grid">
+            <label class="switch-row" for="useDamageModel">
+              <div class="switch-info">
+                <strong>Hasar Modeli</strong>
+                <small>Yapay zeka ile hasar tespiti</small>
+              </div>
+              <div class="toggle-switch">
+                <input id="useDamageModel" name="use_damage_model" type="checkbox" checked />
+                <span class="slider"></span>
+              </div>
+            </label>
+
+            <label class="switch-row" for="useVehicleClassifier">
+              <div class="switch-info">
+                <strong>Marka/Model Modeli</strong>
+                <small>Yapay zeka ile araç tanıma</small>
+              </div>
+              <div class="toggle-switch">
+                <input id="useVehicleClassifier" name="use_vehicle_classifier" type="checkbox" checked />
+                <span class="slider"></span>
+              </div>
+            </label>
+
+            <label class="switch-row" for="useGemini">
+              <div class="switch-info">
+                <strong>Gemini Raporu</strong>
+                <small>Maliyet ve ekspertiz raporu olustur</small>
+              </div>
+              <div class="toggle-switch">
+                <input id="useGemini" name="use_gemini" type="checkbox" checked />
+                <span class="slider"></span>
+              </div>
+            </label>
+
+            <label class="switch-row" for="useAuthorizedService">
+              <div class="switch-info">
+                <strong>Yetkili Servis Fiyat?</strong>
+                <small>2025/2026 bayi fiyatlandırması</small>
+              </div>
+              <div class="toggle-switch">
+                <input id="useAuthorizedService" name="use_authorized_service" type="checkbox" />
+                <span class="slider"></span>
+              </div>
+            </label>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="apiKey">Gemini API Key</label>
+            <div class="key-row">
+              <div class="input-wrapper">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                <input id="apiKey" name="gemini_api_key" type="password" autocomplete="off" placeholder="AIzaSy..." />
+              </div>
+              <button class="icon-button" id="toggleKey" type="button" title="Anahtarları göster/gizle">
+                <span id="toggleKeyIcon">Göster</span>
+              </button>
+            </div>
+          </div>
+
+          <label class="dropzone" id="dropzone" for="fileInput">
+            <input id="fileInput" name="files" type="file" accept="image/*,video/*" multiple />
+            <div class="drop-content">
+              <div class="drop-icon-wrapper">
+                <svg width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+              </div>
+              <span class="drop-title">Görsel veya video sürükle</span>
+              <span class="drop-subtitle">veya seçmek için tıkla (çoklu seçim desteklenir)</span>
+            </div>
+          </label>
+
+          <div class="preview" id="preview" hidden>
+            <div class="preview-media">
+              <img id="imagePreview" alt="Seçilen görsel önizleme" hidden />
+              <video id="videoPreview" controls hidden></video>
+            </div>
+            <div class="preview-info">
+              <strong id="fileName"></strong>
+              <span id="fileMeta"></span>
+              <div class="file-list" id="fileList"></div>
+            </div>
+          </div>
+
+          <button class="primary-button" id="submitButton" type="submit">
+            <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+            Analizi Başlat
+          </button>
+        </form>
+        
+        <div class="panel tips-panel">
+          <h2>Sistem Durumu</h2>
+          <ul class="status-list" id="statusList">
+            <li><span class="status-label">Model Dosyası:</span> <span class="status-value" id="modelFile">-</span></li>
+            <li><span class="status-label">Hasar Modeli:</span> <span class="status-value" id="damageMode">Açık</span></li>
+            <li><span class="status-label">Marka/Model:</span> <span class="status-value" id="vehicleMode">Açık</span></li>
+            <li><span class="status-label">Gemini Raporu:</span> <span class="status-value" id="geminiMode">Açık</span></li>
+            <li><span class="status-label">Gemini API:</span> <span class="status-value" id="keyStatus">Bekleniyor</span></li>
+            <li><span class="status-label">Marka/Model:</span> <span class="status-value" id="vehicleMode">Açık</span></li>
+            <li><span class="status-label">Hasar Sınıfları:</span> <span class="status-value" id="damageClasses">-</span></li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- SAĞ PANEL: SONUÇLAR -->
+      <section class="results-column">
+        <div class="panel result-panel">
+          <div class="panel-heading">
+            <h2>Analiz Sonucu</h2>
+            <span class="result-status" id="resultStatus" hidden></span>
+            <button class="secondary-button" id="clearButton" type="button">
+              <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+              Temizle
+            </button>
+          </div>
+          
+          <div class="empty-state" id="emptyState">
+            <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+            <p>Bir dosya yükleyip analizi başlattığında sonuçlar burada görüntülenecektir.</p>
+          </div>
+
+          <div class="report-view" id="reportView" hidden>
+            <div class="report-section" id="imageGallerySection" hidden style="margin-top: 0; padding-top: 0;">
+              <h3 style="margin-top: 0;">İşlenen Görseller ve Hasar Tespiti</h3>
+              <div class="image-gallery" id="imageGallery" style="display: flex; gap: 15px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 20px; scroll-snap-type: x mandatory;"></div>
+            </div>
+
+            <div class="report-hero">
+              <div class="hero-titles">
+                <span class="report-label">Tespit Edilen Araç</span>
+                <h3 id="vehicleTitle">-</h3>
+              </div>
+              <span class="severity-badge" id="severityBadge">-</span>
+            </div>
+
+            <div class="cost-panel">
+              <span class="cost-label">Tahmini Toplam Maliyet</span>
+              <strong class="cost-value" id="totalCost">-</strong>
+              <small class="cost-detail" id="costBreakdown">-</small>
+            </div>
+
+            <div class="report-section">
+              <h3>Hasar Özeti</h3>
+              <p class="text-block" id="damageSummary">-</p>
+            </div>
+
+            <div class="report-grid">
+              <div class="mini-panel">
+                <span class="mini-label">Tahmini Süre</span>
+                <strong class="mini-value" id="repairTime">-</strong>
+              </div>
+              <div class="mini-panel">
+                <span class="mini-label">İncelenen Görsel</span>
+                <strong class="mini-value" id="imageCount">-</strong>
+              </div>
+            </div>
+
+            <div class="report-section">
+              <h3>Onarım Önerisi</h3>
+              <p class="text-block" id="repairAdvice">-</p>
+            </div>
+
+            <div class="report-section">
+              <h3>Değişecek Parçalar</h3>
+              <div class="chip-list" id="partsList"></div>
+            </div>
+
+            <div class="report-section">
+              <h3>Fiyat Kalemleri</h3>
+              <div class="price-list" id="priceItemsList"></div>
+            </div>
+
+            <div class="report-section">
+              <h3>Ekspertiz Notu</h3>
+              <p class="text-block highlight-text" id="expertNote">-</p>
+            </div>
+
+            <div class="report-section">
+              <h3>Varsayımlar</h3>
+              <ul class="clean-list" id="assumptionsList"></ul>
+            </div>
+
+            <details class="raw-details">
+              <summary>Geliştirici Formatı (JSON)</summary>
+              <pre id="resultBox"></pre>
+            </details>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>

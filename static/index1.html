@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Arac Hasar Analizi</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workbench">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">AI Pipeline</p>
+            <h1>Arac Ekspertiz Pipeline</h1>
+          </div>
+          <div class="status-pill" id="modelStatus">Kontrol ediliyor</div>
+        </header>
+
+        <form class="panel upload-panel" id="damageForm">
+          <div class="pipeline-grid">
+            <label class="switch-row" for="useDamageModel">
+              <span>
+                <strong>Hasar modeli</strong>
+                <small>crack, dent, glass shatter, lamp broken, scratch, tire flat</small>
+              </span>
+              <input id="useDamageModel" name="use_damage_model" type="checkbox" checked />
+            </label>
+
+            <label class="switch-row" for="useVehicleClassifier">
+              <span>
+                <strong>Marka/model modeli</strong>
+                <small>Hugging Face Jordo23/vehicle-classifier</small>
+              </span>
+              <input id="useVehicleClassifier" name="use_vehicle_classifier" type="checkbox" checked />
+            </label>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="apiKey">Gemini API Key</label>
+            <div class="key-row">
+              <input
+                id="apiKey"
+                name="gemini_api_key"
+                type="password"
+                autocomplete="off"
+                placeholder="AIza..."
+              />
+              <button class="icon-button" id="toggleKey" type="button" title="Anahtarlari goster/gizle">
+                <span id="toggleKeyIcon">Goster</span>
+              </button>
+            </div>
+          </div>
+
+          <label class="dropzone" id="dropzone" for="fileInput">
+            <input id="fileInput" name="files" type="file" accept="image/*,video/*" multiple />
+            <span class="drop-icon">+</span>
+            <span class="drop-title">Resim veya video yukle</span>
+            <span class="drop-subtitle">Birden fazla aci/foto ekleyebilirsin</span>
+          </label>
+
+          <div class="preview" id="preview" hidden>
+            <img id="imagePreview" alt="Secilen gorsel onizleme" hidden />
+            <video id="videoPreview" controls hidden></video>
+            <div>
+              <strong id="fileName"></strong>
+              <span id="fileMeta"></span>
+              <div class="file-list" id="fileList"></div>
+            </div>
+          </div>
+
+          <button class="primary-button" id="submitButton" type="submit">
+            Analizi Baslat
+          </button>
+        </form>
+      </section>
+
+      <section class="results-column">
+        <div class="panel result-panel">
+          <div class="panel-heading">
+            <h2>Sonuc</h2>
+            <button class="secondary-button" id="clearButton" type="button">Temizle</button>
+          </div>
+          <div class="empty-state" id="emptyState">
+            Bir dosya yukleyip analizi baslattiginda cevap burada gorunecek.
+          </div>
+          <div class="report-view" id="reportView" hidden>
+            <div class="report-hero">
+              <div>
+                <span class="report-label">Tahmini arac</span>
+                <h3 id="vehicleTitle">-</h3>
+              </div>
+              <span class="severity-badge" id="severityBadge">-</span>
+            </div>
+
+            <div class="cost-panel">
+              <span>Tahmini toplam maliyet</span>
+              <strong id="totalCost">-</strong>
+              <small id="costBreakdown">-</small>
+            </div>
+
+            <div class="report-section">
+              <h3>Hasar Ozeti</h3>
+              <p id="damageSummary">-</p>
+            </div>
+
+            <div class="report-grid">
+              <div class="mini-panel">
+                <span>Islem Suresi</span>
+                <strong id="repairTime">-</strong>
+              </div>
+              <div class="mini-panel">
+                <span>Gorsel Sayisi</span>
+                <strong id="imageCount">-</strong>
+              </div>
+            </div>
+
+            <div class="report-section">
+              <h3>Onarim Onerisi</h3>
+              <p id="repairAdvice">-</p>
+            </div>
+
+            <div class="report-section">
+              <h3>Degisecek Parcalar</h3>
+              <div class="chip-list" id="partsList"></div>
+            </div>
+
+            <div class="report-section">
+              <h3>Usta Notu</h3>
+              <p id="expertNote">-</p>
+            </div>
+
+            <div class="report-section">
+              <h3>Varsayimlar</h3>
+              <ul class="clean-list" id="assumptionsList"></ul>
+            </div>
+
+            <details class="raw-details">
+              <summary>Teknik JSON</summary>
+              <pre id="resultBox"></pre>
+            </details>
+          </div>
+        </div>
+
+        <div class="panel tips-panel">
+          <h2>Durum</h2>
+          <ul id="statusList">
+            <li>Model dosyasi: <span id="modelFile">-</span></li>
+            <li>Hasar modeli: <span id="damageMode">Acik</span></li>
+            <li>Marka/model: <span id="vehicleMode">Acik</span></li>
+            <li>Gemini key: <span id="keyStatus">Formdan girilebilir</span></li>
+            <li>HF model: <span id="vehicleModelStatus">-</span></li>
+            <li>Hasar siniflari: <span id="damageClasses">-</span></li>
+            <li>Endpoint: <span>/api/v1/process-damage</span></li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
